@@ -37,16 +37,20 @@
       <div class="flex items-center space-x-4">
         <h1 id="board-title" class="text-2xl font-bold text-gray-900">A carregar...</h1>
       </div>
-      <div class="text-xs text-green-600 bg-green-50 border border-green-200 px-3 py-1 rounded-full font-medium flex items-center gap-1.5">
-        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-        Conectado ao SQLite (8080)
+      <div id="status-badge" class="text-xs text-amber-600 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full font-medium flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+        A conectar ao Supabase (Render)...
       </div>
     </header>
 
     <!-- Área de Conteúdo / Tabela -->
     <div class="flex-1 overflow-auto p-6">
       <div id="groups-container" class="space-y-8 max-w-6xl">
-        <!-- Grupos e tarefas carregados dinamicamente -->
+        <div class="p-8 text-center text-gray-500 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+          <i class="fa-solid fa-circle-notch fa-spin text-2xl text-indigo-600 mb-3"></i>
+          <p class="font-medium">A conectar ao servidor na nuvem...</p>
+          <p class="text-xs text-gray-400 mt-1">Se for o primeiro acesso, o servidor pode levar até 40 segundos para acordar.</p>
+        </div>
       </div>
     </div>
   </main>
@@ -59,8 +63,15 @@
     async function loadBoard() {
       try {
         const response = await fetch(`${API_URL}/boards`);
+        if (!response.ok) throw new Error("Erro na resposta do servidor");
+        
         const boards = await response.json();
         
+        // Atualiza indicador de status no topo
+        const badge = document.getElementById('status-badge');
+        badge.className = "text-xs text-green-600 bg-green-50 border border-green-200 px-3 py-1 rounded-full font-medium flex items-center gap-1.5";
+        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500"></span> Conectado ao Supabase`;
+
         if (boards.length > 0) {
           currentBoardData = boards[0];
           document.getElementById('board-title').textContent = currentBoardData.title;
@@ -78,6 +89,13 @@
         }
       } catch (error) {
         console.error("Erro ao carregar do servidor:", error);
+        document.getElementById('groups-container').innerHTML = `
+          <div class="p-6 text-center text-red-600 bg-red-50 rounded-lg border border-red-200">
+            <i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i>
+            <p class="font-semibold">Não foi possível ligar à API do Render.</p>
+            <p class="text-xs mt-1">Verifique se o servidor está ativo em <a href="${API_URL}" target="_blank" class="underline">${API_URL}</a></p>
+          </div>
+        `;
       }
     }
 
